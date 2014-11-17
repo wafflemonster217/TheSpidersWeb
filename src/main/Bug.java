@@ -1,12 +1,15 @@
 package main;
 
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class Bug {
 	public HashSet<Integer> neighbors;
 	
 	public int id;
+	
+	public int parent;
+	
+	boolean visited = false;
 	
 	public Bug(int id) {
 		neighbors = new HashSet<Integer>();

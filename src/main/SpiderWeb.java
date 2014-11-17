@@ -2,10 +2,11 @@ package main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.Stack;
 
 public class SpiderWeb {
 	public static final String FILENAME = "spiderMaze.txt";
@@ -14,18 +15,32 @@ public class SpiderWeb {
 
 	public String[][] directions;
 
+	public Queue<Integer> Q;
+
+	public Stack<Integer> solution;
+
 	// web that contains every 3 bug in straight line as a node
 	public HashSet<Bug> web2;
 	private HashSet<Integer> hasAdded;
-	
-	private boolean isAdjacent(int row, int col) {
-		for (Bug b : web1)
-			if (b.id == row)
-				if (b.neighbors.contains(col))
-					return true;
-		return false;
+	private HashSet<Integer> hasAdded2;
+
+	private Bug getBug2(int id) {
+		for (Bug b : web2)
+			if (b.id == id)
+				return b;
+		return null;
 	}
-	
+
+	private HashSet<Bug> getBugSetFromIntegerSet(HashSet<Integer> in) {
+		HashSet result = new HashSet<Bug>();
+		for (int i : in)
+			for (Bug b : web1)
+				if (b.id == i)
+					result.add(b);
+		return result;
+
+	}
+
 	private String oppositeCompassDirection(String direction) {
 		String result = null;
 		switch (direction) {
@@ -53,25 +68,25 @@ public class SpiderWeb {
 		case "SW":
 			result = "NE";
 			break;
-			default:
-				System.out.println("Invalid input into Compass Function");
-				break;
+		default:
+			System.out.println("Invalid input into Compass Function");
+			break;
 		}
 		return result;
 	}
 
 	private void loadFile() throws FileNotFoundException {
-		
+
 		Scanner reader = new Scanner(new File(FILENAME));
-		
+
 		n = Integer.parseInt(reader.nextLine());
-		
+
 		directions = new String[n + 2][n + 2];
-		
+
 		for (int row = 0; row < n + 2; row++)
 			for (int col = 0; col < n + 2; col++)
 				directions[row][col] = "X";
-		
+
 		while (reader.hasNextLine()) {
 
 			String[] line = reader.nextLine().split(" ");
@@ -111,18 +126,39 @@ public class SpiderWeb {
 	}
 
 	public void buildWeb2() {
-		for (int row = 0; row < 11; row++) {
-			for (int col = 0; col < 11; col++)
-				if (row < n && col < n)
-					if (directions[row][col] != "X")
-						if (directions[row][col].equals(directions[row + 1][col + 1]) && directions[row + 1][col + 1].equals(directions[row + 2][col + 2]))
-//							for (Bug b : web1)
-//								if (b.id == row)
-//									if (b.neighbors.contains((row + 3) % n))
-										System.out.println("found possible path from " + row + " to " + row + 3);
-		}
+		web2 = new HashSet<Bug>();
+		hasAdded2 = new HashSet<Integer>();
+		for (Bug a : web1)
+			for (Bug b : getBugSetFromIntegerSet(a.neighbors))
+				for (Bug c : getBugSetFromIntegerSet(b.neighbors))
+					for (Bug d : getBugSetFromIntegerSet(c.neighbors))
+						if (directions[a.id][b.id]
+								.equals(directions[b.id][c.id])
+								&& directions[b.id][c.id]
+										.equals(directions[c.id][d.id])) {
+							if (!hasAdded2.contains(a.id)) {
+								Bug x = new Bug(a.id);
+								x.addNeighbor(d.id);
+								web2.add(x);
+								hasAdded2.add(a.id);
+							} else {
+								for (Bug x : web2)
+									if (x.id == a.id)
+										x.addNeighbor(d.id);
+							}
+							if (!hasAdded2.contains(d.id)) {
+								Bug x = new Bug(d.id);
+								x.addNeighbor(a.id);
+								web2.add(x);
+								hasAdded2.add(d.id);
+							} else {
+								for (Bug x : web2)
+									if (x.id == d.id)
+										x.addNeighbor(a.id);
+							}
+						}
 	}
-	
+
 	public void printDirections() {
 		for (int row = 0; row < n + 2; row++) {
 			for (int col = 0; col < n + 2; col++)
@@ -131,10 +167,36 @@ public class SpiderWeb {
 		}
 	}
 
+	public void BFS() {
+		Q = new LinkedList<Integer>();
+		solution = new Stack<Integer>();
+
+		Q.add(0);
+		while (Q.size() != 0) {
+			int u = Q.remove();
+			for (int v : getBug2(u).neighbors)
+				if (!getBug2(v).visited) {
+					getBug2(v).visited = true;
+					getBug2(v).parent = u;
+					Q.add(v);
+				}
+		}
+	}
+
+	public void traceBack() {
+		int i = n + 1;
+		solution.push(i);
+		while (i != 0) {
+			solution.push(getBug2(i).parent);
+			i = getBug2(i).parent;
+		}
+
+	}
+
 	public SpiderWeb() {
 		web1 = new HashSet<Bug>();
 		hasAdded = new HashSet<Integer>();
-		
+
 		try {
 			loadFile();
 		} catch (FileNotFoundException e) {

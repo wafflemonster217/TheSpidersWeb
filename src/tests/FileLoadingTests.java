@@ -119,8 +119,63 @@ public class FileLoadingTests {
 	
 	@Test
 	public void testBuildWeb2() {
-		sp.printDirections();
 		sp.buildWeb2();
-		
+		assertEquals(89, sp.web2.size());
+		assertTrue(!sp.web2.contains(13));
+		assertTrue(!sp.web2.contains(14));
 	}
+	
+	@Test
+	public void testWeb2Adjacencies_0() {
+		sp.buildWeb2();
+		for (Bug b : sp.web2)
+			if (b.id == 0) {
+				assertEquals(1, b.neighbors.size());
+				assertTrue(b.neighbors.contains(3));
+			}
+	}
+	
+	@Test
+	public void testWeb2Adjacencies_64() {
+		sp.buildWeb2();
+		for (Bug b : sp.web2)
+			if (b.id == 64) {
+				assertEquals(2, b.neighbors.size());
+				assertTrue(b.neighbors.contains(45));
+				assertTrue(b.neighbors.contains(92));
+			}
+	}
+	
+	@Test
+	public void testWeb2Adjacencies_92() {
+		sp.buildWeb2();
+		for (Bug b : sp.web2)
+			if (b.id == 92) {
+				assertEquals(1, b.neighbors.size());
+				assertTrue(b.neighbors.contains(64));
+			}
+	}
+	
+	@Test
+	public void testWeb2Adjacencies_3() {
+		sp.buildWeb2();
+		for (Bug b : sp.web2)
+			if (b.id == 3) {
+				assertEquals(4, b.neighbors.size());
+				assertTrue(b.neighbors.contains(0));
+				assertTrue(b.neighbors.contains(6));
+				assertTrue(b.neighbors.contains(30));
+				assertTrue(b.neighbors.contains(19));
+			}
+	}
+	
+	@Test
+	public void testBFS1() {
+		sp.buildWeb2();
+		sp.BFS();
+		sp.traceBack();
+		while (!sp.solution.empty())
+			System.out.print(sp.solution.pop() + ", ");
+	}
+	
 }
